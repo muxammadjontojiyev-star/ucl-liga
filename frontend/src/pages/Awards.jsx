@@ -1,13 +1,49 @@
-import { teams } from "../data/teams";
+import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../data/api";
 
 function Awards() {
-  const goldenBall = [...teams]
-    .sort((a, b) => b.w - a.w)
-    .slice(0, 3);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const goldenBoot = [...teams]
+  // Eski kodda data/teams.js'dagi statik mock ma'lumotlar ishlatilgan
+  // edi — real foydalanuvchilar reytingi o'zgarsa ham bu sahifa
+  // yangilanmasdi. Endi /users endpointidan real ma'lumot olinadi.
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/users`)
+      .then((res) => res.json())
+      .then((data) => {
+        setUsers(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const goldenBall = [...users].sort((a, b) => b.wins - a.wins).slice(0, 3);
+
+  const goldenBoot = [...users]
     .sort((a, b) => b.goals - a.goals)
     .slice(0, 3);
+
+  if (loading) {
+    return (
+      <div style={{ color: "white", textAlign: "center" }}>
+        <h1 style={{ color: "gold" }}>🥇 Sovrinlar</h1>
+        <p style={{ color: "#aaa" }}>Yuklanmoqda...</p>
+      </div>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <div style={{ color: "white", textAlign: "center" }}>
+        <h1 style={{ color: "gold" }}>🥇 Sovrinlar</h1>
+        <p style={{ color: "#aaa" }}>
+          Hozircha statistika yo'q — o'yinlar boshlanganidan keyin
+          nomzodlar shu yerda chiqadi.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ color: "white" }}>
@@ -29,28 +65,21 @@ function Awards() {
           marginBottom: "20px",
         }}
       >
-        <h2 style={{ color: "gold" }}>
-          🏆 Oltin To'p nomzodlari
-        </h2>
+        <h2 style={{ color: "gold" }}>🏆 Oltin To'p nomzodlari</h2>
 
         {goldenBall.map((player, index) => (
-          <div key={player.id} style={{ marginBottom: "15px" }}>
+          <div key={player.username} style={{ marginBottom: "15px" }}>
             <p>
-              {index === 0
-                ? "🥇"
-                : index === 1
-                ? "🥈"
-                : "🥉"}{" "}
-              {player.user} | {player.club} | {player.w} g'alaba
+              {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}{" "}
+              @{player.username} | {player.league} | {player.wins}{" "}
+              g'alaba
             </p>
 
             <progress
               value={Math.max(
                 20,
                 Math.round(
-                  (player.w /
-                    (goldenBall[0].w || 1)) *
-                    100
+                  (player.wins / (goldenBall[0].wins || 1)) * 100
                 )
               )}
               max="100"
@@ -67,28 +96,21 @@ function Awards() {
           borderRadius: "15px",
         }}
       >
-        <h2 style={{ color: "#7CFC00" }}>
-          👟 Oltin Butsa nomzodlari
-        </h2>
+        <h2 style={{ color: "#7CFC00" }}>👟 Oltin Butsa nomzodlari</h2>
 
         {goldenBoot.map((player, index) => (
-          <div key={player.id} style={{ marginBottom: "15px" }}>
+          <div key={player.username} style={{ marginBottom: "15px" }}>
             <p>
-              {index === 0
-                ? "🥇"
-                : index === 1
-                ? "🥈"
-                : "🥉"}{" "}
-              {player.user} | {player.club} | {player.goals} gol
+              {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}{" "}
+              @{player.username} | {player.league} | {player.goals}{" "}
+              gol
             </p>
 
             <progress
               value={Math.max(
                 20,
                 Math.round(
-                  (player.goals /
-                    (goldenBoot[0].goals || 1)) *
-                    100
+                  (player.goals / (goldenBoot[0].goals || 1)) * 100
                 )
               )}
               max="100"

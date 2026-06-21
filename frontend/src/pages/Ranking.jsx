@@ -1,24 +1,29 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../data/api";
 
 function Ranking() {
   const [search, setSearch] = useState("");
   const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/users")
+    fetch(`${API_BASE_URL}/users`)
       .then((res) => res.json())
-      .then((data) => setTeams(data));
+      .then((data) => {
+        setTeams(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
   }, []);
 
-  const sortedTeams = [...teams].sort(
-    (a, b) => b.points - a.points
-  );
+  const sortedTeams = [...teams].sort((a, b) => b.points - a.points);
 
-  const filteredTeams = sortedTeams.filter(
-    (team) =>
-      team.username
-        .toLowerCase()
-        .includes(search.toLowerCase())
+  const filteredTeams = sortedTeams.filter((team) =>
+    team.username.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -48,65 +53,79 @@ function Ranking() {
         }}
       />
 
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          color: "white",
-          background: "#1a1d29",
-          borderRadius: "15px",
-          overflow: "hidden",
-        }}
-      >
-        <thead>
-          <tr style={{ background: "#252a3d" }}>
-            <th>#</th>
-            <th>Ishtirokchi</th>
-            <th>O</th>
-            <th>G</th>
-            <th>D</th>
-            <th>M</th>
-            <th>GF</th>
-            <th>Ochko</th>
-          </tr>
-        </thead>
+      {loading && (
+        <p style={{ color: "#aaa", textAlign: "center" }}>
+          Yuklanmoqda...
+        </p>
+      )}
 
-        <tbody>
-          {filteredTeams.map((team, index) => (
-            <tr
-              key={team.username}
-              style={{ textAlign: "center" }}
-            >
-              <td>{index + 1}</td>
+      {error && (
+        <p style={{ color: "#ff6b6b", textAlign: "center" }}>
+          Serverga ulanishda xatolik. Internetni tekshirib qaytadan
+          urinib ko'ring.
+        </p>
+      )}
 
-              <td>@{team.username}</td>
+      {!loading && !error && filteredTeams.length === 0 && (
+        <p style={{ color: "#aaa", textAlign: "center" }}>
+          Hozircha ishtirokchilar yo'q.
+        </p>
+      )}
 
-              <td>
-                {team.wins +
-                  team.draws +
-                  team.losses}
-              </td>
-
-              <td>{team.wins}</td>
-
-              <td>{team.draws}</td>
-
-              <td>{team.losses}</td>
-
-              <td>{team.goals}</td>
-
-              <td
-                style={{
-                  color: "#ffd700",
-                  fontWeight: "bold",
-                }}
-              >
-                {team.points}
-              </td>
+      {!loading && !error && filteredTeams.length > 0 && (
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+            color: "white",
+            background: "#1a1d29",
+            borderRadius: "15px",
+            overflow: "hidden",
+          }}
+        >
+          <thead>
+            <tr style={{ background: "#252a3d" }}>
+              <th>#</th>
+              <th>Ishtirokchi</th>
+              <th>O</th>
+              <th>G</th>
+              <th>D</th>
+              <th>M</th>
+              <th>GF</th>
+              <th>Ochko</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {filteredTeams.map((team, index) => (
+              <tr key={team.username} style={{ textAlign: "center" }}>
+                <td>{index + 1}</td>
+
+                <td>@{team.username}</td>
+
+                <td>{team.wins + team.draws + team.losses}</td>
+
+                <td>{team.wins}</td>
+
+                <td>{team.draws}</td>
+
+                <td>{team.losses}</td>
+
+                <td>{team.goals}</td>
+
+                <td
+                  style={{
+                    color: "#ffd700",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {team.points}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
